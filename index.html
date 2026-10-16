@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PULSE - Trening & Forma</title>
+
+  <!-- PWA & iOS Meta Tags -->
+  <meta name="theme-color" content="#0B132B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PULSE">
+
+  <!-- Ikona SVG zakodowana bezpośrednio w HTML (zero zewnętrznych plików) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%230B132B'/><path d='M280 64L160 272h96l-32 176 160-224h-96z' fill='%2310B981'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%230B132B'/><path d='M280 64L160 272h96l-32 176 160-224h-96z' fill='%2310B981'/></svg>">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { 900: '#0B132B', 800: '#1C2541', 700: '#3A506B' }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --color-navy: #0B132B;
+      --color-mint: #E6F7ED;
+      --color-mint-text: #0F766E;
+      --color-lilac: #F1EFFD;
+      --color-lilac-text: #5850EC;
+      --color-ice: #E0F2FE;
+      --color-ice-text: #0369A1;
+      --safe-top: env(safe-area-inset-top, 20px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* Zapobieganie automatycznemu zoomowi w polach input na iPhone */
+    input, select, textarea, button {
+      font-size: 16px !important;
+      font-family: inherit;
+    }
+
+    /* Bento Box Cards */
+    .bento-card {
+      background: #FFFFFF;
+      border-radius: 26px;
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 4px 20px -2px rgba(11, 19, 43, 0.04);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .bento-card-navy {
+      background: linear-gradient(145deg, #0B132B, #162447);
+      color: #FFFFFF;
+      border-radius: 28px;
+      box-shadow: 0 10px 25px -5px rgba(11, 19, 43, 0.25);
+    }
+
+    .bento-card-mint {
+      background: var(--color-mint);
+      color: var(--color-mint-text);
+      border: 1px solid rgba(167, 243, 208, 0.6);
+    }
+
+    .bento-card-lilac {
+      background: var(--color-lilac);
+      color: var(--color-lilac-text);
+      border: 1px solid rgba(199, 210, 254, 0.6);
+    }
+
+    .bento-card-ice {
+      background: var(--color-ice);
+      color: var(--color-ice-text);
+      border: 1px solid rgba(186, 230, 253, 0.6);
+    }
+
+    /* Apple Safe Areas */
+    .safe-top-padding {
+      padding-top: max(16px, env(safe-area-inset-top));
+    }
+    .safe-bottom-nav {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    .main-content-scroll {
+      padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    }
+
+    .touch-press:active {
+      transform: scale(0.975);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC]">
+
+  <!-- Płótno konfetti po ukończonym treningu -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Kontener iPhone -->
+  <div class="max-w-md mx-auto min-h-screen bg-[#F8FAFC] flex flex-col relative shadow-2xl safe-top-padding">
+    
+    <!-- Główny obszar widoków -->
+    <main id="main-content" class="flex-1 px-4 py-2 main-content-scroll overflow-y-auto no-scrollbar">
+      <!-- Wstrzykiwane przez JS -->
+    </main>
+
+    <!-- Dolna belka nawigacji (iOS Bento Tab Bar) -->
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-4 py-2 z-40 safe-bottom-nav">
+      <div class="grid grid-cols-4 items-center gap-1">
+        
+        <!-- Tab 1: Dziś -->
+        <button data-tab="dashboard" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl transition touch-press text-[#0B132B]">
+          <div class="nav-icon w-6 h-6 flex items-center justify-center transition-transform">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          </div>
+          <span class="nav-label text-[10px] font-black uppercase tracking-wider mt-0.5">Dziś</span>
+        </button>
+
+        <!-- Tab 2: Trening -->
+        <button data-tab="workout" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl transition touch-press text-slate-400 relative">
+          <div class="nav-icon w-6 h-6 flex items-center justify-center transition-transform relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span id="nav-workout-indicator" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse"></span>
+          </div>
+          <span class="nav-label text-[10px] uppercase tracking-wider mt-0.5">Trening</span>
+        </button>
+
+        <!-- Tab 3: Historia -->
+        <button data-tab="history" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl transition touch-press text-slate-400">
+          <div class="nav-icon w-6 h-6 flex items-center justify-center transition-transform">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="nav-label text-[10px] uppercase tracking-wider mt-0.5">Historia</span>
+        </button>
+
+        <!-- Tab 4: Profil -->
+        <button data-tab="profile" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl transition touch-press text-slate-400">
+          <div class="nav-icon w-6 h-6 flex items-center justify-center transition-transform">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <span class="nav-label text-[10px] uppercase tracking-wider mt-0.5">Profil</span>
+        </button>
+
+      </div>
+    </nav>
+
+    <!-- Kontener Modali -->
+    <div id="modal-container"></div>
+  </div>
+
+  <!-- CAŁA LOGIKA APLIKACJI W JEDNYM SKRYPCIE - ZERO BŁĘDÓW IMPORTU / DZIAŁA NAWET PO 2-KLIKU -->
+  <script>
+    /* =========================================================================
+       1. STORAGE & BACKUP MODULE
+       ========================================================================= */
+    const Storage = {
+      KEYS: {
+        PLANS: 'pulse_plans_v1',
+        HISTORY: 'pulse_history_v1',
+        PROFILE: 'pulse_profile_v1',
+        ACTIVE: 'pulse_active_v1'
+      },
+
+      getPlans() {
+        try {
+          const d = localStorage.getItem(this.KEYS.PLANS);
+          return d ? JSON.parse(d) : [];
+        } catch(e) { return []; }
+      },
+      savePlans(plans) {
+        localStorage.setItem(this.KEYS.PLANS, JSON.stringify(plans));
+      },
+      getPlanById(id) {
+        return this.getPlans().find(p => p.id === id) || null;
+      },
+      savePlan(plan) {
+        const plans = this.getPlans();
+        const idx = plans.findIndex(p => p.id === plan.id);
+        if (idx >= 0) plans[idx] = plan;
+        else plans.push(plan);
+        this.savePlans(plans);
+        return plan;
+      },
+      deletePlan(id) {
+        const plans = this.getPlans().filter(p => p.id !== id);
+        this.savePlans(plans);
+      },
+
+      getHistory() {
+        try {
+          const d = localStorage.getItem(this.KEYS.HISTORY);
+          return d ? JSON.parse(d) : [];
+        } catch(e) { return []; }
+      },
+      saveHistory(hist) {
+        localStorage.setItem(this.KEYS.HISTORY, JSON.stringify(hist));
+      },
+      addWorkoutToHistory(workout) {
+        const history = this.getHistory();
+        const workoutNumber = history.length + 1;
+        const entry = {
+          ...workout,
+          id: workout.id || 'w_' + Date.now(),
+          workoutNumber,
+          completedAt: workout.completedAt || new Date().toISOString()
+        };
+        history.unshift(entry);
+        this.saveHistory(history);
+        return entry;
+      },
+      getWorkoutById(id) {
+        return this.getHistory().find(w => w.id === id) || null;
+      },
+      deleteWorkout(id) {
+        const history = this.getHistory().filter(w => w.id !== id);
+        this.saveHistory(history);
+      },
+
+      getProfile() {
+        try {
+          const d = localStorage.getItem(this.KEYS.PROFILE);
+          return d ? JSON.parse(d) : { name: '', gender: 'M', age: '', height: '', currentWeight: '', targetWeight: '' };
+        } catch(e) {
+          return { name: '', gender: 'M', age: '', height: '', currentWeight: '', targetWeight: '' };
+        }
+      },
+      saveProfile(p) {
+        localStorage.setItem(this.KEYS.PROFILE, JSON.stringify(p));
+      },
+
+      getActiveWorkout() {
+        try {
+          const d = localStorage.getItem(this.KEYS.ACTIVE);
+          return d ? JSON.parse(d) : null;
+        } catch(e) { return null; }
+      },
+      saveActiveWorkout(w) {
+        localStorage.setItem(this.KEYS.ACTIVE, JSON.stringify(w));
+      },
+      clearActiveWorkout() {
+        localStorage.removeItem(this.KEYS.ACTIVE);
+      },
+
+      exportBackup() {
+        return JSON.stringify({
+          version: 1,
+          date: new Date().toISOString(),
+          plans: this.getPlans(),
+          history: this.getHistory(),
+          profile: this.getProfile()
+        }, null, 2);
+      },
+      importBackup(jsonStr) {
+        try {
+          const data = JSON.parse(jsonStr);
+          if (Array.isArray(data.plans)) this.savePlans(data.plans);
+          if (Array.isArray(data.history)) this.saveHistory(data.history);
+          if (data.profile) this.saveProfile(data.profile);
+          return { success: true };
+        } catch(e) {
+          return { success: false, error: e.message };
+        }
+      },
+      resetAll() {
+        localStorage.removeItem(this.KEYS.PLANS);
+        localStorage.removeItem(this.KEYS.HISTORY);
+        localStorage.removeItem(this.KEYS.PROFILE);
+        localStorage.removeItem(this.KEYS.ACTIVE);
+      }
+    };
+
+    /* =========================================================================
+       2. AUDIO & HAPTIC FEEDBACK (Web Audio API - 100% offline)
+       ========================================================================= */
+    const SoundEffects = {
+      ctx: null,
+      getCtx() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        return this.ctx;
+      },
+      playTick() {
+        try {
+          const c = this.getCtx();
+          if (!c) return;
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, c.currentTime);
+          g.gain.setValueAtTime(0.15, c.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
+          osc.connect(g);
+          g.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.08);
+        } catch(e) {}
+      },
+      playSetComplete() {
+        try {
+          const c = this.getCtx();
+          if (!c) return;
+          const now = c.currentTime;
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+          g.gain.setValueAtTime(0.2, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.connect(g);
+          g.connect(c.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+          if (navigator.vibrate) navigator.vibrate([40]);
+        } catch(e) {}
+      },
+      playRestComplete() {
+        try {
+          const c = this.getCtx();
+          if (!c) return;
+          const now = c.currentTime;
+          const osc1 = c.createOscillator();
+          const g1 = c.createGain();
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(587.33, now);
+          g1.gain.setValueAtTime(0.3, now);
+          g1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc1.connect(g1);
+          g1.connect(c.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.4);
+
+          const osc2 = c.createOscillator();
+          const g2 = c.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(880, now + 0.15);
+          g2.gain.setValueAtTime(0.3, now + 0.15);
+          g2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc2.connect(g2);
+          g2.connect(c.destination);
+          osc2.start(now + 0.15);
+          osc2.stop(now + 0.6);
+          if (navigator.vibrate) navigator.vibrate([150, 100, 250]);
+        } catch(e) {}
+      },
+      playCelebration() {
+        try {
+          const c = this.getCtx();
+          if (!c) return;
+          const notes = [
+            { f: 440, d: 0, l: 0.12 },
+            { f: 554.37, d: 0.12, l: 0.12 },
+            { f: 659.25, d: 0.24, l: 0.15 },
+            { f: 880, d: 0.38, l: 0.45 }
+          ];
+          const now = c.currentTime;
+          notes.forEach(n => {
+            const osc = c.createOscillator();
+            const g = c.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(n.f, now + n.d);
+            g.gain.setValueAtTime(0.25, now + n.d);
+            g.gain.exponentialRampToValueAtTime(0.001, now + n.d + n.l);
+            osc.connect(g);
+            g.connect(c.destination);
+            osc.start(now + n.d);
+            osc.stop(now + n.d + n.l);
+          });
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        } catch(e) {}
+      }
+    };
+
+    /* =========================================================================
+       3. CONFETTI GENERATOR (Offline Canvas Confetti)
+       ========================================================================= */
+    function triggerConfetti(durationMs = 3500) {
+      const canvas = document.getElementById('confetti-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ['#0B132B', '#0F766E', '#5850EC', '#F59E0B', '#EF4444', '#10B981', '#38BDF8'];
+      const particles = [];
+      for (let i = 0; i < 110; i++) {
+        particles.push({
+          x: window.innerWidth * 0.5 + (Math.random() - 0.5) * 80,
+          y: window.innerHeight * 0.4 + (Math.random() - 0.5) * 40,
+          w: Math.random() * 9 + 4,
+          h: Math.random() * 5 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 1) * 16 - 4,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 14,
+          gravity: 0.45,
+          drag: 0.96,
+          opacity: 1
+        });
+      }
+
+      const start = Date.now();
+      function render() {
+        const elapsed = Date.now() - start;
+        if (elapsed > durationMs) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.vy += p.gravity;
+          p.vx *= p.drag; p.vy *= p.drag;
+          p.rotation += p.rotationSpeed;
+          if (elapsed > durationMs - 1000) {
+            p.opacity = Math.max(0, 1 - (elapsed - (durationMs - 1000)) / 1000);
+          }
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.opacity;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        requestAnimationFrame(render);
+      }
+      render();
+    }
+
+    /* =========================================================================
+       4. GŁÓWNA APLIKACJA & WIDOKI
+       ========================================================================= */
+    const App = {
+      currentTab: 'dashboard',
+      activeSession: null,
+      stopwatchInterval: null,
+      restInterval: null,
+      restLeft: 0,
+      restTotal: 60,
+
+      init() {
+        this.bindNav();
+        const active = Storage.getActiveWorkout();
+        if (active) {
+          this.activeSession = active;
+          this.startStopwatch();
+          this.switchTab('workout');
+        } else {
+          this.switchTab('dashboard');
+        }
+      },
+
+      bindNav() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const tab = e.currentTarget.dataset.tab;
+            this.switchTab(tab);
+          });
+        });
+      },
+
+      switchTab(tab) {
+        this.currentTab = tab;
+        this.updateNavUi();
+        this.renderCurrentTab();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      updateNavUi() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          const t = btn.dataset.tab;
+          const icon = btn.querySelector('.nav-icon');
+          const label = btn.querySelector('.nav-label');
+          if (t === this.currentTab) {
+            btn.classList.add('text-[#0B132B]');
+            btn.classList.remove('text-slate-400');
+            if (icon) icon.classList.add('scale-110');
+            if (label) label.classList.add('font-black');
+          } else {
+            btn.classList.remove('text-[#0B132B]');
+            btn.classList.add('text-slate-400');
+            if (icon) icon.classList.remove('scale-110');
+            if (label) label.classList.remove('font-black');
+          }
+        });
+
+        const dot = document.getElementById('nav-workout-indicator');
+        if (dot) {
+          if (this.activeSession) dot.classList.remove('hidden');
+          else dot.classList.add('hidden');
+        }
+      },
+
+      renderCurrentTab() {
+        const container = document.getElementById('main-content');
+        if (this.currentTab === 'dashboard') this.renderDashboard(container);
+        else if (this.currentTab === 'workout') this.renderWorkout(container);
+        else if (this.currentTab === 'history') this.renderHistory(container);
+        else if (this.currentTab === 'profile') this.renderProfile(container);
+      },
+
+      /* -----------------------------------------------------------------------
+         WIDOK: DASHBOARD (DZIŚ)
+         ----------------------------------------------------------------------- */
+      renderDashboard(container) {
+        const plans = Storage.getPlans();
+        const history = Storage.getHistory();
+        const profile = Storage.getProfile();
+
+        const now = new Date();
+        const jsDay = now.getDay();
+        const currentDayOfWeek = jsDay === 0 ? 7 : jsDay;
+        const todaysPlan = plans.find(p => p.days && p.days.includes(currentDayOfWeek));
+
+        const weekDays = this.getWeekDays(now);
+        const workoutsThisWeek = history.filter(w => {
+          const wDate = new Date(w.completedAt);
+          return wDate >= weekDays[0].date && wDate <= new Date(weekDays[6].date.getTime() + 86400000);
+        });
+
+        const todayFormatted = now.toISOString().split('T')[0];
+        const todaysDone = history.filter(w => w.completedAt.startsWith(todayFormatted));
+
+        let heroHtml = '';
+        if (todaysDone.length > 0) {
+          const last = todaysDone[0];
+          heroHtml = `
+            <div class="bento-card bento-card-mint p-5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-wider text-[#0F766E] flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#0F766E] animate-pulse"></span>
+                  Zadanie wykonane na dziś! 🎉
+                </span>
+                <span class="text-xs font-bold text-[#0F766E]/80">Zaliczone</span>
+              </div>
+              <h2 class="text-xl font-black uppercase tracking-tight text-[#0F766E] mt-2">${last.planTitle || 'Ukończony trening'}</h2>
+              <p class="text-xs text-[#0F766E]/80 mt-1 font-medium">
+                Czas: ${Math.round(last.durationSeconds / 60)} min • Tonaż: ${last.totalVolume || 0} kg • Serie: ${last.completedSetsCount || 0}
+              </p>
+              <button id="btn-hero-extra" class="w-full mt-4 py-3 bg-[#0F766E] text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl touch-press">
+                Zrób dodatkowy trening
+              </button>
+            </div>
+          `;
+        } else if (todaysPlan) {
+          heroHtml = `
+            <div class="bento-card bento-card-navy p-5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-widest text-[#BAE6FD]">Dzisiejszy Trening</span>
+                <span class="text-[11px] font-bold bg-white/10 px-2.5 py-1 rounded-full text-white/90">
+                  ${todaysPlan.exercises ? todaysPlan.exercises.length : 0} ćwiczeń
+                </span>
+              </div>
+              <h2 class="text-2xl font-black uppercase tracking-tight text-white mt-2">${todaysPlan.title}</h2>
+              <p class="text-xs text-slate-300 mt-1">Domyślna przerwa: ${todaysPlan.defaultRestSeconds || 60}s • Gotowy do startu</p>
+              <button id="btn-hero-start" data-plan-id="${todaysPlan.id}" class="w-full mt-5 py-3.5 bg-white text-[#0B132B] font-black text-sm uppercase tracking-wider rounded-2xl shadow-lg touch-press flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                Rozpocznij Trening
+              </button>
+            </div>
+          `;
+        } else if (plans.length > 0) {
+          heroHtml = `
+            <div class="bento-card p-5 bg-white border border-slate-200/80">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-400">Harmonogram</span>
+                <span class="text-xs font-semibold text-slate-500">Rest Day</span>
+              </div>
+              <h2 class="text-lg font-black uppercase tracking-tight text-slate-800 mt-1">Dziś regeneracja 🧘‍♂️</h2>
+              <p class="text-xs text-slate-500 mt-1">Brak treningu w planie na dzisiaj, ale możesz wykonać dowolny inny.</p>
+              <button id="btn-hero-choose" class="w-full mt-4 py-3 bg-[#0B132B] text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl touch-press">
+                Wybierz trening z listy
+              </button>
+            </div>
+          `;
+        }
+
+        container.innerHTML = `
+          <div class="space-y-4 animate-fade-in">
+            <!-- Header -->
+            <div class="flex items-center justify-between pt-2">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">PULSE ATHLETICS</span>
+                <h1 class="text-2xl font-black text-[#0B132B] uppercase tracking-tight">
+                  ${profile.name ? `Cześć, ${profile.name}` : 'Gotowy na trening?'}
+                </h1>
+              </div>
+              <button id="btn-header-prof" class="w-10 h-10 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-sm touch-press">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              </button>
+            </div>
+
+            <!-- Bento Kalendarz Tygodniowy -->
+            <div class="bento-card p-4">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan Tygodniowy</span>
+                <span class="text-xs font-semibold text-slate-500">${this.getMonthName(now)} ${now.getFullYear()}</span>
+              </div>
+              <div class="grid grid-cols-7 gap-1.5 text-center">
+                ${weekDays.map(d => {
+                  const isToday = d.dayNum === currentDayOfWeek;
+                  const hasDone = history.some(w => w.completedAt.startsWith(d.dateStr));
+                  const hasPlan = plans.some(p => p.days && p.days.includes(d.dayNum));
+                  let bg = 'bg-slate-50 text-slate-600 border-transparent';
+                  if (hasDone) bg = 'bg-[#E6F7ED] text-[#0F766E] border-[#A7F3D0]';
+                  else if (hasPlan) bg = 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+                  return `
+                    <div class="flex flex-col items-center py-2.5 px-1 rounded-2xl border transition-all ${isToday ? 'ring-2 ring-[#0B132B] font-bold shadow-sm' : ''} ${bg}">
+                      <span class="text-[10px] font-bold uppercase tracking-wider mb-1">${d.dayName}</span>
+                      <span class="text-sm font-black">${d.dayMonth}</span>
+                      <div class="h-2 flex items-center justify-center">
+                        ${hasDone ? `<svg class="w-3 h-3 text-[#0F766E]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>` : (hasPlan ? `<span class="w-1.5 h-1.5 rounded-full bg-[#0284C7] mx-auto mt-1"></span>` : '')}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <div class="flex items-center justify-center space-x-4 mt-3 pt-3 border-t border-slate-100 text-[11px] font-medium text-slate-500">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#0F766E]"></span> Zrobiony</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#0284C7]"></span> Zaplanowany</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Wolne</span>
+              </div>
+            </div>
+
+            <!-- Bento Hero -->
+            ${heroHtml}
+
+            <!-- Bento Mini Metryki -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bento-card bento-card-mint p-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase tracking-wider text-[#0F766E]">W tym tyg.</span>
+                  <span class="p-1 rounded-lg bg-white/70 text-[#0F766E]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <span class="text-3xl font-black text-[#0F766E]">${workoutsThisWeek.length}</span>
+                  <span class="text-xs font-semibold text-[#0F766E]/80 ml-1">treningów</span>
+                </div>
+              </div>
+              <div class="bento-card bento-card-lilac p-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase tracking-wider text-[#5850EC]">Łącznie</span>
+                  <span class="p-1 rounded-lg bg-white/70 text-[#5850EC]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <span class="text-3xl font-black text-[#5850EC]">${history.length}</span>
+                  <span class="text-xs font-semibold text-[#5850EC]/80 ml-1">ukończonych</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Twoje Plany -->
+            <div class="space-y-3 pt-1">
+              <div class="flex items-center justify-between">
+                <h2 class="text-base font-extrabold text-[#0B132B] uppercase tracking-tight">Twoje Plany</h2>
+                <button id="btn-create-plan" class="text-xs font-bold uppercase text-[#0B132B] bg-slate-100 px-3 py-1.5 rounded-xl touch-press">
+                  + Dodaj Plan
+                </button>
+              </div>
+
+              ${plans.length === 0 ? `
+                <div class="bento-card p-6 text-center border-dashed border-2 border-slate-200">
+                  <h3 class="font-extrabold text-slate-800 text-sm uppercase">Czysta baza treningowa</h3>
+                  <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                    Nie masz jeszcze żadnego planu. Kliknij poniżej, aby stworzyć swój własny harmonogram.
+                  </p>
+                  <button id="btn-create-plan-empty" class="mt-4 px-5 py-3 rounded-2xl bg-[#0B132B] text-white font-black text-xs uppercase tracking-wider touch-press">
+                    + Stwórz Pierwszy Plan
+                  </button>
+                </div>
+              ` : `
+                <div class="space-y-2.5">
+                  ${plans.map(p => this.renderPlanCard(p)).join('')}
+                </div>
+              `}
+            </div>
+
+          </div>
+        `;
+
+        // Bindowanie akcji Dashboardu
+        const bCreate = container.querySelector('#btn-create-plan');
+        if (bCreate) bCreate.onclick = () => this.openPlanEditor();
+        const bCreateEmpty = container.querySelector('#btn-create-plan-empty');
+        if (bCreateEmpty) bCreateEmpty.onclick = () => this.openPlanEditor();
+        const bProf = container.querySelector('#btn-header-prof');
+        if (bProf) bProf.onclick = () => this.switchTab('profile');
+        const bHeroStart = container.querySelector('#btn-hero-start');
+        if (bHeroStart) bHeroStart.onclick = () => this.startWorkout(bHeroStart.dataset.planId);
+        const bHeroExtra = container.querySelector('#btn-hero-extra');
+        if (bHeroExtra) bHeroExtra.onclick = () => this.showPlanSelectorModal();
+        const bHeroChoose = container.querySelector('#btn-hero-choose');
+        if (bHeroChoose) bHeroChoose.onclick = () => this.showPlanSelectorModal();
+
+        container.querySelectorAll('.btn-edit-plan').forEach(btn => {
+          btn.onclick = () => this.openPlanEditor(btn.dataset.id);
+        });
+        container.querySelectorAll('.btn-quick-start').forEach(btn => {
+          btn.onclick = () => this.startWorkout(btn.dataset.id);
+        });
+      },
+
+      renderPlanCard(plan) {
+        const dayNames = ['Pn', 'Wt', 'Śr', 'Czw', 'Pt', 'So', 'Nd'];
+        const assigned = (plan.days || []).map(d => dayNames[d - 1]).join(', ') || 'Brak dni';
+        return `
+          <div class="bento-card p-4 bg-white flex items-center justify-between">
+            <div class="flex-1 pr-3">
+              <div class="flex items-center gap-2">
+                <h3 class="font-extrabold text-sm text-[#0B132B] uppercase tracking-tight">${plan.title}</h3>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  ${plan.exercises ? plan.exercises.length : 0} ćw.
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-1">
+                Dni: <span class="text-slate-700 font-semibold">${assigned}</span> • Przerwa: <span class="text-slate-700 font-semibold">${plan.defaultRestSeconds || 60}s</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button data-id="${plan.id}" class="btn-edit-plan w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center touch-press">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              </button>
+              <button data-id="${plan.id}" class="btn-quick-start px-3.5 py-2 rounded-xl bg-[#0B132B] text-white font-extrabold text-xs uppercase tracking-wider touch-press">
+                Start
+              </button>
+            </div>
+          </div>
+        `;
+      },
+
+      /* -----------------------------------------------------------------------
+         WIDOK: AKTYWNY TRENING (WORKOUT)
+         ----------------------------------------------------------------------- */
+      startWorkout(planId) {
+        const plan = planId ? Storage.getPlanById(planId) : null;
+        this.activeSession = {
+          id: 'w_' + Date.now(),
+          planId: plan ? plan.id : 'custom',
+          planTitle: plan ? plan.title : 'Trening dowolny',
+          defaultRestSeconds: plan ? (plan.defaultRestSeconds || 60) : 60,
+          startTime: Date.now(),
+          elapsedSeconds: 0,
+          exercises: (plan && plan.exercises && plan.exercises.length > 0)
+            ? plan.exercises.map(ex => ({
+                id: 'ex_' + Math.random().toString(36).substr(2, 8),
+                name: ex.name,
+                sets: Array.from({ length: ex.targetSets || 3 }, (_, i) => ({
+                  setNum: i + 1,
+                  weight: ex.defaultWeight || 0,
+                  reps: ex.targetReps || 10,
+                  completed: false
+                }))
+              }))
+            : [
+                {
+                  id: 'ex_1',
+                  name: 'Ćwiczenie 1',
+                  sets: [
+                    { setNum: 1, weight: 20, reps: 10, completed: false },
+                    { setNum: 2, weight: 20, reps: 10, completed: false },
+                    { setNum: 3, weight: 20, reps: 10, completed: false }
+                  ]
+                }
+              ]
+        };
+        Storage.saveActiveWorkout(this.activeSession);
+        this.startStopwatch();
+        this.switchTab('workout');
+      },
+
+      startStopwatch() {
+        if (this.stopwatchInterval) clearInterval(this.stopwatchInterval);
+        const initial = Math.floor((Date.now() - this.activeSession.startTime) / 1000);
+        this.activeSession.elapsedSeconds = Math.max(initial, this.activeSession.elapsedSeconds || 0);
+
+        this.stopwatchInterval = setInterval(() => {
+          this.activeSession.elapsedSeconds++;
+          const el = document.getElementById('workout-duration-timer');
+          if (el) el.textContent = this.formatTime(this.activeSession.elapsedSeconds);
+          if (this.activeSession.elapsedSeconds % 5 === 0) {
+            Storage.saveActiveWorkout(this.activeSession);
+          }
+        }, 1000);
+      },
+
+      stopStopwatch() {
+        if (this.stopwatchInterval) {
+          clearInterval(this.stopwatchInterval);
+          this.stopwatchInterval = null;
+        }
+      },
+
+      formatTime(sec) {
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        if (h > 0) return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      },
+
+      renderWorkout(container) {
+        if (!this.activeSession) {
+          container.innerHTML = `
+            <div class="bento-card p-8 text-center my-8">
+              <h2 class="text-lg font-black uppercase text-slate-800">Brak aktywnego treningu</h2>
+              <p class="text-xs text-slate-500 mt-2">Wybierz plan z ekranu głównego, aby rozpocząć trening ze stoperem.</p>
+              <button id="btn-empty-go-dash" class="mt-4 px-6 py-3.5 bg-[#0B132B] text-white text-xs font-black uppercase tracking-wider rounded-2xl touch-press">
+                Przejdź do Ekranu Głównego
+              </button>
+            </div>
+          `;
+          container.querySelector('#btn-empty-go-dash').onclick = () => this.switchTab('dashboard');
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="space-y-4 animate-fade-in pb-12">
+            <!-- Pasek ze Stoperem -->
+            <div class="bento-card bento-card-navy p-5 sticky top-2 z-20 shadow-xl">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-black tracking-widest uppercase text-[#BAE6FD] flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Trening w toku
+                  </span>
+                  <h1 class="text-xl font-black uppercase tracking-tight text-white mt-1">
+                    ${this.activeSession.planTitle}
+                  </h1>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Czas</span>
+                  <div id="workout-duration-timer" class="text-2xl font-black text-white font-mono">
+                    ${this.formatTime(this.activeSession.elapsedSeconds)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Baner Odliczania Przerwy -->
+            <div id="rest-timer-banner" class="hidden bento-card bento-card-lilac p-4 border border-[#5850EC]/30 shadow-md">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-xl bg-[#5850EC] text-white flex items-center justify-center font-bold">
+                    ⏱️
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#5850EC]">Odpoczynek</span>
+                    <div id="rest-display" class="text-xl font-black text-[#5850EC] font-mono leading-none">00:00</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button id="btn-rest-minus" class="px-2.5 py-1.5 rounded-lg bg-white/80 text-xs font-bold text-[#5850EC] touch-press">-15s</button>
+                  <button id="btn-rest-plus" class="px-2.5 py-1.5 rounded-lg bg-white/80 text-xs font-bold text-[#5850EC] touch-press">+15s</button>
+                  <button id="btn-rest-skip" class="px-3 py-1.5 rounded-lg bg-[#5850EC] text-white text-xs font-extrabold uppercase touch-press">Pomiń</button>
+                </div>
+              </div>
+              <div class="w-full bg-white/60 h-1.5 rounded-full overflow-hidden mt-3">
+                <div id="rest-bar" class="bg-[#5850EC] h-full rounded-full transition-all duration-300" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <!-- Lista Ćwiczeń -->
+            <div class="space-y-4">
+              ${this.activeSession.exercises.map((ex, exIdx) => this.renderExerciseLive(ex, exIdx)).join('')}
+            </div>
+
+            <!-- Przycisk dodawania ćwiczenia -->
+            <button id="btn-add-ex-live" class="w-full py-3.5 bento-card bg-white border-dashed border-2 border-slate-300 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded-2xl touch-press flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              Dodaj kolejne ćwiczenie
+            </button>
+
+            <!-- Akcje końcowe -->
+            <div class="pt-2 space-y-2">
+              <button id="btn-finish-workout" class="w-full py-4 rounded-2xl bg-[#0B132B] text-white font-black text-sm uppercase tracking-wider shadow-lg touch-press flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                Zakończ Trening
+              </button>
+              <button id="btn-cancel-workout" class="w-full py-2.5 text-rose-500 font-bold text-xs uppercase tracking-wider touch-press">
+                Porzuć ten trening
+              </button>
+            </div>
+          </div>
+        `;
+
+        this.bindWorkoutEvents(container);
+      },
+
+      renderExerciseLive(ex, exIdx) {
+        return `
+          <div class="bento-card p-4 bg-white">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2 flex-1">
+                <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-black text-xs flex items-center justify-center">${exIdx + 1}</span>
+                <input type="text" value="${ex.name}" data-ex-idx="${exIdx}" class="input-ex-name font-black text-sm text-[#0B132B] uppercase tracking-tight bg-transparent outline-none flex-1" placeholder="Nazwa ćwiczenia" />
+              </div>
+              <button data-ex-idx="${exIdx}" class="btn-del-ex text-slate-400 hover:text-rose-500 p-1 touch-press">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-12 gap-2 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider py-2">
+              <div class="col-span-2">Seria</div>
+              <div class="col-span-4">Ciężar (kg)</div>
+              <div class="col-span-4">Powtórzenia</div>
+              <div class="col-span-2">Status</div>
+            </div>
+
+            <div class="space-y-1.5">
+              ${ex.sets.map((set, setIdx) => `
+                <div class="grid grid-cols-12 gap-2 items-center p-1.5 rounded-xl transition ${set.completed ? 'bg-[#E6F7ED] border border-[#A7F3D0]' : 'bg-slate-50 border border-slate-100'}">
+                  <div class="col-span-2 text-center font-black text-xs ${set.completed ? 'text-[#0F766E]' : 'text-slate-600'}">
+                    ${set.setNum}
+                  </div>
+                  <div class="col-span-4">
+                    <input type="number" step="0.5" value="${set.weight}" data-ex="${exIdx}" data-set="${setIdx}" data-field="weight" class="inp-set w-full text-center font-bold text-sm bg-white rounded-lg py-1 border ${set.completed ? 'border-[#A7F3D0] text-[#0F766E]' : 'border-slate-200 text-slate-800'} outline-none" />
+                  </div>
+                  <div class="col-span-4">
+                    <input type="number" step="1" value="${set.reps}" data-ex="${exIdx}" data-set="${setIdx}" data-field="reps" class="inp-set w-full text-center font-bold text-sm bg-white rounded-lg py-1 border ${set.completed ? 'border-[#A7F3D0] text-[#0F766E]' : 'border-slate-200 text-slate-800'} outline-none" />
+                  </div>
+                  <div class="col-span-2 flex justify-center">
+                    <button data-ex="${exIdx}" data-set="${setIdx}" class="btn-check-set w-8 h-8 rounded-lg flex items-center justify-center touch-press ${set.completed ? 'bg-[#0F766E] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-400'}">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="mt-3 pt-2 border-t border-slate-100 flex justify-end">
+              <button data-ex-idx="${exIdx}" class="btn-add-set text-xs font-bold text-[#0B132B] uppercase tracking-wider bg-slate-100 px-3 py-1.5 rounded-xl touch-press">
+                + Dodaj Serię
+              </button>
+            </div>
+          </div>
+        `;
+      },
+
+      bindWorkoutEvents(container) {
+        container.querySelectorAll('.input-ex-name').forEach(inp => {
+          inp.oninput = (e) => {
+            const idx = parseInt(e.target.dataset.exIdx);
+            this.activeSession.exercises[idx].name = e.target.value;
+            Storage.saveActiveWorkout(this.activeSession);
+          };
+        });
+
+        container.querySelectorAll('.inp-set').forEach(inp => {
+          inp.onchange = (e) => {
+            const exIdx = parseInt(e.target.dataset.ex);
+            const setIdx = parseInt(e.target.dataset.set);
+            const field = e.target.dataset.field;
+            this.activeSession.exercises[exIdx].sets[setIdx][field] = parseFloat(e.target.value) || 0;
+            Storage.saveActiveWorkout(this.activeSession);
+          };
+        });
+
+        container.querySelectorAll('.btn-check-set').forEach(btn => {
+          btn.onclick = (e) => {
+            const exIdx = parseInt(e.currentTarget.dataset.ex);
+            const setIdx = parseInt(e.currentTarget.dataset.set);
+            const s = this.activeSession.exercises[exIdx].sets[setIdx];
+            s.completed = !s.completed;
+            Storage.saveActiveWorkout(this.activeSession);
+
+            if (s.completed) {
+              SoundEffects.playSetComplete();
+              this.startRestTimer(this.activeSession.defaultRestSeconds || 60);
+            }
+            this.renderWorkout(container);
+          };
+        });
+
+        container.querySelectorAll('.btn-add-set').forEach(btn => {
+          btn.onclick = (e) => {
+            const exIdx = parseInt(e.currentTarget.dataset.exIdx);
+            const ex = this.activeSession.exercises[exIdx];
+            const last = ex.sets[ex.sets.length - 1];
+            ex.sets.push({
+              setNum: ex.sets.length + 1,
+              weight: last ? last.weight : 20,
+              reps: last ? last.reps : 10,
+              completed: false
+            });
+            Storage.saveActiveWorkout(this.activeSession);
+            this.renderWorkout(container);
+          };
+        });
+
+        container.querySelectorAll('.btn-del-ex').forEach(btn => {
+          btn.onclick = (e) => {
+            const idx = parseInt(e.currentTarget.dataset.exIdx);
+            if (confirm('Usunąć to ćwiczenie z treningu?')) {
+              this.activeSession.exercises.splice(idx, 1);
+              Storage.saveActiveWorkout(this.activeSession);
+              this.renderWorkout(container);
+            }
+          };
+        });
+
+        const bAddEx = container.querySelector('#btn-add-ex-live');
+        if (bAddEx) {
+          bAddEx.onclick = () => {
+            const name = prompt('Podaj nazwę nowego ćwiczenia:', 'Nowe ćwiczenie');
+            if (name && name.trim()) {
+              this.activeSession.exercises.push({
+                id: 'ex_' + Date.now(),
+                name: name.trim(),
+                sets: [
+                  { setNum: 1, weight: 20, reps: 10, completed: false },
+                  { setNum: 2, weight: 20, reps: 10, completed: false },
+                  { setNum: 3, weight: 20, reps: 10, completed: false }
+                ]
+              });
+              Storage.saveActiveWorkout(this.activeSession);
+              this.renderWorkout(container);
+            }
+          };
+        }
+
+        // Kontrola timera przerw
+        const bMinus = container.querySelector('#btn-rest-minus');
+        if (bMinus) bMinus.onclick = () => { this.restLeft = Math.max(5, this.restLeft - 15); this.updateRestUI(); };
+        const bPlus = container.querySelector('#btn-rest-plus');
+        if (bPlus) bPlus.onclick = () => { this.restLeft += 15; this.restTotal += 15; this.updateRestUI(); };
+        const bSkip = container.querySelector('#btn-rest-skip');
+        if (bSkip) bSkip.onclick = () => this.stopRestTimer();
+
+        // Zakończenie treningu
+        const bFinish = container.querySelector('#btn-finish-workout');
+        if (bFinish) bFinish.onclick = () => this.finishWorkout();
+
+        // Porzucenie
+        const bCancel = container.querySelector('#btn-cancel-workout');
+        if (bCancel) {
+          bCancel.onclick = () => {
+            if (confirm('Czy na pewno chcesz porzucić obecny trening?')) {
+              this.stopStopwatch();
+              this.stopRestTimer();
+              Storage.clearActiveWorkout();
+              this.activeSession = null;
+              this.switchTab('dashboard');
+            }
+          };
+        }
+      },
+
+      startRestTimer(seconds) {
+        if (this.restInterval) clearInterval(this.restInterval);
+        this.restTotal = seconds;
+        this.restLeft = seconds;
+
+        const banner = document.getElementById('rest-timer-banner');
+        if (banner) banner.classList.remove('hidden');
+        this.updateRestUI();
+
+        this.restInterval = setInterval(() => {
+          this.restLeft--;
+          this.updateRestUI();
+
+          if (this.restLeft <= 3 && this.restLeft > 0) SoundEffects.playTick();
+          if (this.restLeft <= 0) {
+            this.stopRestTimer();
+            SoundEffects.playRestComplete();
+          }
+        }, 1000);
+      },
+
+      stopRestTimer() {
+        if (this.restInterval) {
+          clearInterval(this.restInterval);
+          this.restInterval = null;
+        }
+        const banner = document.getElementById('rest-timer-banner');
+        if (banner) banner.classList.add('hidden');
+      },
+
+      updateRestUI() {
+        const d = document.getElementById('rest-display');
+        const b = document.getElementById('rest-bar');
+        if (d) {
+          const m = Math.floor(this.restLeft / 60);
+          const s = this.restLeft % 60;
+          d.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        if (b) {
+          const pct = Math.max(0, Math.min(100, (this.restLeft / this.restTotal) * 100));
+          b.style.width = `${pct}%`;
+        }
+      },
+
+      finishWorkout() {
+        this.stopStopwatch();
+        this.stopRestTimer();
+
+        let totalVolume = 0;
+        let setsCount = 0;
+        this.activeSession.exercises.forEach(ex => {
+          ex.sets.forEach(s => {
+            if (s.completed) {
+              setsCount++;
+              totalVolume += (s.weight * s.reps);
+            }
+          });
+        });
+
+        const finished = {
+          ...this.activeSession,
+          completedAt: new Date().toISOString(),
+          durationSeconds: this.activeSession.elapsedSeconds,
+          totalVolume,
+          completedSetsCount: setsCount
+        };
+
+        const saved = Storage.addWorkoutToHistory(finished);
+        Storage.clearActiveWorkout();
+        this.activeSession = null;
+
+        this.showCelebration(saved);
+      },
+
+      showCelebration(workout) {
+        SoundEffects.playCelebration();
+        triggerConfetti(3500);
+
+        const quotes = [
+          "JUST DO IT. Kolejny krok do mistrzowskiej formy zrobiony!",
+          "Niezłomność to Twój nawyk. Zwycięzcy nie szukają wymówek!",
+          "Duma, dyscyplina, postęp. Zasłużyłeś na odpoczynek!"
+        ];
+        const quote = quotes[Math.floor(Math.random() * quotes.length)];
+        const modal = document.getElementById('modal-container');
+
+        modal.innerHTML = `
+          <div class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in">
+            <div class="bg-white w-full max-w-sm rounded-[32px] p-6 text-center shadow-2xl relative">
+              <div class="w-16 h-1 bg-slate-200 rounded-full mx-auto mb-4"></div>
+              <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-200 text-amber-900 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl text-3xl">
+                🏆
+              </div>
+              <span class="text-xs font-black uppercase tracking-widest text-emerald-600">TRENING UKOŃCZONY</span>
+              <h2 class="text-2xl font-black uppercase tracking-tight text-[#0B132B] mt-1">DOBRA ROBOTA! 🔥</h2>
+              <p class="text-xs text-slate-500 mt-2 italic px-2">"${quote}"</p>
+
+              <div class="grid grid-cols-3 gap-2 mt-5 text-center">
+                <div class="bento-card bento-card-mint p-2.5">
+                  <span class="text-[9px] font-bold uppercase text-[#0F766E]">Czas</span>
+                  <div class="text-sm font-black text-[#0F766E]">${Math.round(workout.durationSeconds / 60)} min</div>
+                </div>
+                <div class="bento-card bento-card-ice p-2.5">
+                  <span class="text-[9px] font-bold uppercase text-[#0369A1]">Tonaż</span>
+                  <div class="text-sm font-black text-[#0369A1]">${workout.totalVolume || 0} kg</div>
+                </div>
+                <div class="bento-card bento-card-lilac p-2.5">
+                  <span class="text-[9px] font-bold uppercase text-[#5850EC]">Serie</span>
+                  <div class="text-sm font-black text-[#5850EC]">${workout.completedSetsCount || 0}</div>
+                </div>
+              </div>
+
+              <button id="btn-close-celeb" class="w-full mt-6 py-4 rounded-2xl bg-[#0B132B] text-white font-black text-xs uppercase tracking-wider shadow-lg touch-press">
+                Zapisz i Zobacz Historię
+              </button>
+            </div>
+          </div>
+        `;
+
+        modal.querySelector('#btn-close-celeb').onclick = () => {
+          modal.innerHTML = '';
+          this.switchTab('history');
+        };
+      },
+
+      /* -----------------------------------------------------------------------
+         WIDOK: HISTORIA
+         ----------------------------------------------------------------------- */
+      renderHistory(container) {
+        const history = Storage.getHistory();
+        container.innerHTML = `
+          <div class="space-y-4 animate-fade-in pb-12">
+            <div class="flex items-center justify-between pt-2">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">DZIENNIK POSTĘPÓW</span>
+                <h1 class="text-2xl font-black text-[#0B132B] uppercase tracking-tight">Historia Treningów</h1>
+              </div>
+              <span class="text-xs font-black px-3 py-1.5 rounded-full bg-slate-200/80 text-slate-700">
+                ${history.length} sesji
+              </span>
+            </div>
+
+            ${history.length === 0 ? `
+              <div class="bento-card p-8 text-center my-6">
+                <div class="text-3xl mb-2">📋</div>
+                <h3 class="font-black text-slate-800 text-base uppercase">Brak zapisanych treningów</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                  Gdy ukończysz trening, pojawi się tutaj ze szczegółowym wykazem serii, powtórzeń i ciężarów.
+                </p>
+                <button id="btn-hist-go-dash" class="mt-4 px-6 py-3 rounded-2xl bg-[#0B132B] text-white font-extrabold text-xs uppercase tracking-wider touch-press">
+                  Zrób pierwszy trening
+                </button>
+              </div>
+            ` : `
+              <div class="space-y-3">
+                ${history.map((w, idx) => {
+                  const d = new Date(w.completedAt);
+                  const dateStr = d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+                  const timeStr = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+                  return `
+                    <div class="bento-card p-4 bg-white">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="w-7 h-7 rounded-xl bg-[#0B132B] text-white font-black text-xs flex items-center justify-center">
+                            #${w.workoutNumber || (history.length - idx)}
+                          </span>
+                          <div>
+                            <h3 class="font-black text-sm text-[#0B132B] uppercase tracking-tight">${w.planTitle}</h3>
+                            <p class="text-[11px] text-slate-400">${dateStr} o ${timeStr}</p>
+                          </div>
+                        </div>
+                        <button data-id="${w.id}" class="btn-inspect-w px-3 py-1.5 rounded-xl bg-slate-100 text-[#0B132B] font-bold text-xs uppercase tracking-wider touch-press">
+                          Szczegóły
+                        </button>
+                      </div>
+                      <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100 text-center">
+                        <div class="bg-slate-50 p-2 rounded-xl">
+                          <span class="text-[9px] font-bold text-slate-400 uppercase">Czas</span>
+                          <div class="text-xs font-black text-slate-800">${Math.round(w.durationSeconds / 60)} min</div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl">
+                          <span class="text-[9px] font-bold text-slate-400 uppercase">Tonaż</span>
+                          <div class="text-xs font-black text-slate-800">${w.totalVolume || 0} kg</div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl">
+                          <span class="text-[9px] font-bold text-slate-400 uppercase">Serie</span>
+                          <div class="text-xs font-black text-slate-800">${w.completedSetsCount || 0} zaliczonych</div>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        `;
+
+        const bGo = container.querySelector('#btn-hist-go-dash');
+        if (bGo) bGo.onclick = () => this.switchTab('dashboard');
+
+        container.querySelectorAll('.btn-inspect-w').forEach(btn => {
+          btn.onclick = () => this.openWorkoutDetail(btn.dataset.id);
+        });
+      },
+
+      openWorkoutDetail(id) {
+        const w = Storage.getWorkoutById(id);
+        if (!w) return;
+        const modal = document.getElementById('modal-container');
+        const d = new Date(w.completedAt);
+        const dateStr = d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        modal.innerHTML = `
+          <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in">
+            <div class="bg-white w-full max-w-lg rounded-t-[32px] sm:rounded-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+              <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Trening #${w.workoutNumber || ''} • ${dateStr}</span>
+                  <h2 class="text-xl font-black uppercase tracking-tight text-[#0B132B]">${w.planTitle}</h2>
+                </div>
+                <button id="btn-close-w-detail" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 touch-press">✕</button>
+              </div>
+
+              <div class="p-5 overflow-y-auto space-y-4 flex-1">
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="bento-card bento-card-mint p-3 text-center">
+                    <span class="text-[10px] font-bold uppercase text-[#0F766E]">Czas</span>
+                    <div class="text-base font-black text-[#0F766E]">${Math.round(w.durationSeconds / 60)} min</div>
+                  </div>
+                  <div class="bento-card bento-card-ice p-3 text-center">
+                    <span class="text-[10px] font-bold uppercase text-[#0369A1]">Tonaż</span>
+                    <div class="text-base font-black text-[#0369A1]">${w.totalVolume || 0} kg</div>
+                  </div>
+                  <div class="bento-card bento-card-lilac p-3 text-center">
+                    <span class="text-[10px] font-bold uppercase text-[#5850EC]">Ćwiczeń</span>
+                    <div class="text-base font-black text-[#5850EC]">${w.exercises ? w.exercises.length : 0}</div>
+                  </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                  ${(w.exercises || []).map((ex, exIdx) => `
+                    <div class="bento-card p-4 bg-slate-50 border border-slate-200/70">
+                      <div class="flex items-center gap-2 mb-2">
+                        <span class="w-5 h-5 rounded-md bg-[#0B132B] text-white text-[11px] font-black flex items-center justify-center">${exIdx + 1}</span>
+                        <h4 class="font-extrabold text-sm text-[#0B132B] uppercase tracking-tight">${ex.name}</h4>
+                      </div>
+                      <div class="space-y-1">
+                        ${ex.sets.map(s => `
+                          <div class="flex items-center justify-between text-xs py-1.5 px-3 rounded-lg ${s.completed ? 'bg-white font-semibold text-slate-800 border border-slate-100' : 'text-slate-400 line-through'}">
+                            <span>Seria ${s.setNum}</span>
+                            <div class="flex items-center gap-3">
+                              <span>${s.weight} kg</span>
+                              <span>×</span>
+                              <span>${s.reps} powt.</span>
+                              ${s.completed ? '<span class="text-emerald-500 font-bold">✓</span>' : '<span class="text-slate-300">niezaliczona</span>'}
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                <button id="btn-del-single-w" class="text-xs font-bold text-rose-500 uppercase tracking-wider touch-press">Usuń z historii</button>
+                <button id="btn-close-single-w" class="px-5 py-2.5 rounded-xl bg-[#0B132B] text-white font-extrabold text-xs uppercase tracking-wider touch-press">Zamknij</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const close = () => { modal.innerHTML = ''; };
+        modal.querySelector('#btn-close-w-detail').onclick = close;
+        modal.querySelector('#btn-close-single-w').onclick = close;
+        modal.querySelector('#btn-del-single-w').onclick = () => {
+          if (confirm('Usunąć ten trening z historii?')) {
+            Storage.deleteWorkout(w.id);
+            close();
+            this.renderHistory(document.getElementById('main-content'));
+          }
+        };
+      },
+
+      /* -----------------------------------------------------------------------
+         WIDOK: PROFIL & BACKUP
+         ----------------------------------------------------------------------- */
+      renderProfile(container) {
+        const prof = Storage.getProfile();
+        const curW = parseFloat(prof.currentWeight) || 0;
+        const tarW = parseFloat(prof.targetWeight) || 0;
+
+        let diffTxt = 'Ustaw cel wagi';
+        let diffColor = 'text-slate-500';
+        if (curW > 0 && tarW > 0) {
+          const diff = Math.round((curW - tarW) * 10) / 10;
+          if (diff === 0) { diffTxt = 'Cel osiągnięty! 🎯'; diffColor = 'text-emerald-600'; }
+          else if (diff > 0) { diffTxt = `Do celu redukcji: -${diff} kg`; diffColor = 'text-amber-600'; }
+          else { diffTxt = `Do celu masy: +${Math.abs(diff)} kg`; diffColor = 'text-blue-600'; }
+        }
+
+        container.innerHTML = `
+          <div class="space-y-4 animate-fade-in pb-12">
+            <div class="pt-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">USTAWIENIA I KONTO</span>
+              <h1 class="text-2xl font-black text-[#0B132B] uppercase tracking-tight">Twój Profil</h1>
+            </div>
+
+            <!-- Bento Statystyki Biometryczne -->
+            <div class="bento-card p-5 bg-white">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Dane Biometryczne</span>
+                  <h2 class="text-lg font-black uppercase text-[#0B132B]">${prof.name || 'Użytkownik'}</h2>
+                </div>
+                <button id="btn-edit-prof" class="px-3.5 py-1.5 rounded-xl bg-slate-100 text-xs font-bold text-[#0B132B] uppercase tracking-wider touch-press">
+                  Edytuj
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 mt-3">
+                <div class="bg-slate-50 p-3 rounded-2xl">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Waga obecna</span>
+                  <div class="text-xl font-black text-[#0B132B] mt-0.5">${prof.currentWeight ? `${prof.currentWeight} kg` : '—'}</div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Cel wagi</span>
+                  <div class="text-xl font-black text-[#0B132B] mt-0.5">${prof.targetWeight ? `${prof.targetWeight} kg` : '—'}</div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Wzrost</span>
+                  <div class="text-base font-black text-slate-700 mt-0.5">${prof.height ? `${prof.height} cm` : '—'}</div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Wiek / Płeć</span>
+                  <div class="text-base font-black text-slate-700 mt-0.5">${prof.age ? `${prof.age} lat` : '—'} • ${prof.gender === 'K' ? 'Kobieta' : 'Mężczyzna'}</div>
+                </div>
+              </div>
+
+              <div class="mt-3 p-3 rounded-xl bg-slate-100/80 flex items-center justify-between text-xs font-bold">
+                <span class="text-slate-500 uppercase text-[10px]">Status postępu</span>
+                <span class="${diffColor}">${diffTxt}</span>
+              </div>
+            </div>
+
+            <!-- Bento Kopia Zapasowa (JSON Backup) -->
+            <div class="bento-card p-5 bg-white">
+              <div class="mb-3">
+                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Bezpieczeństwo</span>
+                <h2 class="text-lg font-black uppercase text-[#0B132B]">Kopia Zapasowa (Backup)</h2>
+                <p class="text-xs text-slate-500 mt-1">
+                  Wszystkie dane trzymasz lokalnie na telefonie. Pobierz plik JSON lub załaduj go w razie potrzeby.
+                </p>
+              </div>
+
+              <div class="space-y-2.5 pt-2">
+                <button id="btn-export-json" class="w-full py-3.5 rounded-2xl bg-[#0B132B] text-white font-extrabold text-xs uppercase tracking-wider touch-press flex items-center justify-center gap-2">
+                  <span>📥</span> Zapisz Kopię Zapasową (Pobierz JSON)
+                </button>
+                <label class="w-full py-3.5 rounded-2xl bg-slate-100 text-[#0B132B] font-extrabold text-xs uppercase tracking-wider touch-press flex items-center justify-center gap-2 cursor-pointer">
+                  <span>📤</span> Załaduj Kopię z Pliku
+                  <input type="file" id="input-import-json" accept=".json,application/json" class="hidden" />
+                </label>
+              </div>
+              <div id="backup-msg" class="hidden mt-3 p-3 rounded-xl text-xs font-semibold text-center"></div>
+            </div>
+
+            <!-- Bento iPhone PWA Tip -->
+            <div class="bento-card bento-card-ice p-5">
+              <div class="flex items-center gap-3">
+                <div class="text-2xl">📱</div>
+                <div>
+                  <h3 class="text-sm font-black uppercase text-[#0369A1]">Instalacja na iPhone</h3>
+                  <p class="text-xs text-[#0369A1]/90 mt-0.5">
+                    W Safari kliknij ikonę <strong>Udostępnij (kwadrat ze strzałką)</strong>, a następnie wybierz <strong>„Do ekranu początkowego”</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 text-center">
+              <button id="btn-reset-data" class="text-xs font-bold text-slate-400 hover:text-rose-500 uppercase tracking-wider touch-press">
+                Zresetuj wszystkie dane aplikacji
+              </button>
+            </div>
+          </div>
+        `;
+
+        container.querySelector('#btn-edit-prof').onclick = () => this.openEditProfileModal();
+
+        container.querySelector('#btn-export-json').onclick = () => {
+          const jsonStr = Storage.exportBackup();
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `pulse-trening-backup-${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          const msg = container.querySelector('#backup-msg');
+          msg.className = 'mt-3 p-3 rounded-xl text-xs font-semibold text-center bg-emerald-50 text-emerald-700';
+          msg.textContent = 'Kopia została pobrana na urządzenie!';
+          msg.classList.remove('hidden');
+        };
+
+        container.querySelector('#input-import-json').onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const res = Storage.importBackup(event.target.result);
+            const msg = container.querySelector('#backup-msg');
+            msg.classList.remove('hidden');
+            if (res.success) {
+              msg.className = 'mt-3 p-3 rounded-xl text-xs font-semibold text-center bg-emerald-50 text-emerald-700';
+              msg.textContent = 'Dane zostały zaimportowane pomyślnie!';
+              setTimeout(() => this.renderProfile(container), 1000);
+            } else {
+              msg.className = 'mt-3 p-3 rounded-xl text-xs font-semibold text-center bg-rose-50 text-rose-700';
+              msg.textContent = 'Błąd importu pliku: ' + res.error;
+            }
+          };
+          reader.readAsText(file);
+        };
+
+        container.querySelector('#btn-reset-data').onclick = () => {
+          if (confirm('UWAGA: Czy na pewno chcesz wyczyścić wszystkie dane?')) {
+            Storage.resetAll();
+            alert('Wyczyszczono dane.');
+            this.renderProfile(container);
+          }
+        };
+      },
+
+      openEditProfileModal() {
+        const prof = Storage.getProfile();
+        const modal = document.getElementById('modal-container');
+        modal.innerHTML = `
+          <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in">
+            <div class="bg-white w-full max-w-lg rounded-t-[32px] sm:rounded-3xl p-6 shadow-2xl">
+              <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <h2 class="text-xl font-black uppercase text-[#0B132B]">Edycja Profilu</h2>
+                <button id="btn-close-prof-modal" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 touch-press">✕</button>
+              </div>
+
+              <form id="form-edit-prof" class="space-y-4 pt-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Twoje Imię</label>
+                  <input type="text" id="inp-p-name" value="${prof.name || ''}" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" placeholder="np. Alex" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Waga obecna (kg)</label>
+                    <input type="number" step="0.1" id="inp-p-weight" value="${prof.currentWeight || ''}" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" placeholder="80" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Cel wagi (kg)</label>
+                    <input type="number" step="0.1" id="inp-p-target" value="${prof.targetWeight || ''}" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" placeholder="75" />
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Wzrost (cm)</label>
+                    <input type="number" id="inp-p-height" value="${prof.height || ''}" class="w-full px-3 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" placeholder="180" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Wiek</label>
+                    <input type="number" id="inp-p-age" value="${prof.age || ''}" class="w-full px-3 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" placeholder="26" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Płeć</label>
+                    <select id="inp-p-gender" class="w-full px-3 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none">
+                      <option value="M" ${prof.gender === 'M' ? 'selected' : ''}>Mężczyzna</option>
+                      <option value="K" ${prof.gender === 'K' ? 'selected' : ''}>Kobieta</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 mt-2 rounded-2xl bg-[#0B132B] text-white font-black text-xs uppercase tracking-wider shadow-lg touch-press">
+                  Zapisz dane
+                </button>
+              </form>
+            </div>
+          </div>
+        `;
+
+        const close = () => { modal.innerHTML = ''; };
+        modal.querySelector('#btn-close-prof-modal').onclick = close;
+        modal.querySelector('#form-edit-prof').onsubmit = (e) => {
+          e.preventDefault();
+          Storage.saveProfile({
+            name: modal.querySelector('#inp-p-name').value.trim(),
+            currentWeight: modal.querySelector('#inp-p-weight').value,
+            targetWeight: modal.querySelector('#inp-p-target').value,
+            height: modal.querySelector('#inp-p-height').value,
+            age: modal.querySelector('#inp-p-age').value,
+            gender: modal.querySelector('#inp-p-gender').value
+          });
+          close();
+          this.renderProfile(document.getElementById('main-content'));
+        };
+      },
+
+      /* -----------------------------------------------------------------------
+         KREATOR / EDYTOR PLANÓW (PLAN EDITOR)
+         ----------------------------------------------------------------------- */
+      openPlanEditor(planId = null) {
+        let plan = null;
+        if (planId) {
+          plan = JSON.parse(JSON.stringify(Storage.getPlanById(planId)));
+        } else {
+          plan = {
+            id: 'plan_' + Date.now(),
+            title: '',
+            defaultRestSeconds: 60,
+            days: [1],
+            exercises: [
+              { id: 'ex_1', name: 'Wyciskanie sztangi leżąc', targetSets: 4, targetReps: 10, defaultWeight: 50 },
+              { id: 'ex_2', name: 'Wznosy hantli bokiem', targetSets: 3, targetReps: 12, defaultWeight: 10 }
+            ]
+          };
+        }
+
+        const modal = document.getElementById('modal-container');
+        const isNew = !planId;
+        const dayNames = [
+          { num: 1, label: 'Pn' }, { num: 2, label: 'Wt' }, { num: 3, label: 'Śr' },
+          { num: 4, label: 'Czw' }, { num: 5, label: 'Pt' }, { num: 6, label: 'So' }, { num: 7, label: 'Nd' }
+        ];
+
+        const renderEditor = () => {
+          modal.innerHTML = `
+            <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in">
+              <div class="bg-white w-full max-w-lg rounded-t-[32px] sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Kreator Treningu</span>
+                    <h2 class="text-xl font-black uppercase tracking-tight text-[#0B132B]">
+                      ${isNew ? 'Nowy Plan Treningowy' : 'Edycja Planu'}
+                    </h2>
+                  </div>
+                  <button id="btn-close-plan-ed" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 touch-press">✕</button>
+                </div>
+
+                <div class="p-5 overflow-y-auto space-y-5 flex-1">
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nazwa Planu</label>
+                    <input type="text" id="inp-plan-title" value="${plan.title}" class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" placeholder="np. Push - Klatka & Barki" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5">Dni Tygodnia</label>
+                    <div class="grid grid-cols-7 gap-1.5">
+                      ${dayNames.map(d => {
+                        const sel = plan.days.includes(d.num);
+                        return `
+                          <button type="button" data-day="${d.num}" class="btn-day-toggle py-2.5 rounded-xl text-xs font-bold transition touch-press ${sel ? 'bg-[#0B132B] text-white shadow-sm' : 'bg-slate-100 text-slate-600'}">
+                            ${d.label}
+                          </button>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Domyślna Przerwa (sekundy)</label>
+                    <div class="flex items-center gap-2">
+                      <input type="number" step="5" min="10" id="inp-plan-rest" value="${plan.defaultRestSeconds || 60}" class="w-24 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 outline-none" />
+                      <div class="flex gap-1.5 flex-1">
+                        <button type="button" class="btn-q-rest px-2 py-2 rounded-xl bg-slate-100 text-xs font-bold" data-r="45">45s</button>
+                        <button type="button" class="btn-q-rest px-2 py-2 rounded-xl bg-slate-100 text-xs font-bold" data-r="60">60s</button>
+                        <button type="button" class="btn-q-rest px-2 py-2 rounded-xl bg-slate-100 text-xs font-bold" data-r="90">90s</button>
+                        <button type="button" class="btn-q-rest px-2 py-2 rounded-xl bg-slate-100 text-xs font-bold" data-r="120">120s</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="text-xs font-bold uppercase text-slate-500">Ćwiczenia w planie</label>
+                      <span class="text-[11px] font-bold text-slate-400">${plan.exercises.length} ćwiczeń</span>
+                    </div>
+
+                    <div class="space-y-3">
+                      ${plan.exercises.map((ex, idx) => `
+                        <div class="bento-card p-3 bg-slate-50/80 border border-slate-200/80" data-idx="${idx}">
+                          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/60">
+                            <div class="flex items-center gap-2 flex-1">
+                              <span class="w-5 h-5 rounded-md bg-[#0B132B] text-white text-[10px] font-black flex items-center justify-center">${idx + 1}</span>
+                              <input type="text" value="${ex.name}" data-f="name" class="inp-ed-ex font-extrabold text-xs text-slate-800 uppercase bg-transparent outline-none flex-1" placeholder="Nazwa ćwiczenia" />
+                            </div>
+                            <button type="button" data-del-idx="${idx}" class="btn-del-ed-ex text-slate-400 hover:text-rose-500 p-1 touch-press">✕</button>
+                          </div>
+                          <div class="grid grid-cols-3 gap-2">
+                            <div>
+                              <label class="block text-[9px] font-bold uppercase text-slate-400">Serie</label>
+                              <input type="number" min="1" value="${ex.targetSets || 3}" data-f="targetSets" class="inp-ed-ex w-full px-2 py-1 rounded-lg bg-white border border-slate-200 text-center font-bold text-xs" />
+                            </div>
+                            <div>
+                              <label class="block text-[9px] font-bold uppercase text-slate-400">Powtórzenia</label>
+                              <input type="number" min="1" value="${ex.targetReps || 10}" data-f="targetReps" class="inp-ed-ex w-full px-2 py-1 rounded-lg bg-white border border-slate-200 text-center font-bold text-xs" />
+                            </div>
+                            <div>
+                              <label class="block text-[9px] font-bold uppercase text-slate-400">Ciężar (kg)</label>
+                              <input type="number" step="0.5" value="${ex.defaultWeight || 0}" data-f="defaultWeight" class="inp-ed-ex w-full px-2 py-1 rounded-lg bg-white border border-slate-200 text-center font-bold text-xs" />
+                            </div>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+
+                    <button type="button" id="btn-add-ex-plan" class="w-full mt-3 py-3 border-dashed border-2 border-slate-200 rounded-2xl text-xs font-extrabold text-[#0B132B] uppercase tracking-wider touch-press">
+                      + Dodaj Ćwiczenie
+                    </button>
+                  </div>
+                </div>
+
+                <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+                  ${!isNew ? `<button type="button" id="btn-del-this-plan" class="text-xs font-bold text-rose-500 uppercase tracking-wider touch-press">Usuń Plan</button>` : '<div></div>'}
+                  <button type="button" id="btn-save-this-plan" class="px-6 py-3 rounded-2xl bg-[#0B132B] text-white font-black text-xs uppercase tracking-wider shadow-lg touch-press">
+                    Zapisz Plan
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          const close = () => { modal.innerHTML = ''; };
+          modal.querySelector('#btn-close-plan-ed').onclick = close;
+
+          modal.querySelectorAll('.btn-day-toggle').forEach(btn => {
+            btn.onclick = () => {
+              const dNum = parseInt(btn.dataset.day);
+              if (plan.days.includes(dNum)) plan.days = plan.days.filter(d => d !== dNum);
+              else { plan.days.push(dNum); plan.days.sort(); }
+              renderEditor();
+            };
+          });
+
+          modal.querySelectorAll('.btn-q-rest').forEach(btn => {
+            btn.onclick = () => {
+              const r = parseInt(btn.dataset.r);
+              plan.defaultRestSeconds = r;
+              modal.querySelector('#inp-plan-rest').value = r;
+            };
+          });
+
+          modal.querySelectorAll('.inp-ed-ex').forEach(inp => {
+            inp.oninput = (e) => {
+              const row = e.target.closest('[data-idx]');
+              const idx = parseInt(row.dataset.idx);
+              const field = e.target.dataset.f;
+              let val = e.target.value;
+              if (field !== 'name') val = parseFloat(val) || 0;
+              plan.exercises[idx][field] = val;
+            };
+          });
+
+          modal.querySelectorAll('.btn-del-ed-ex').forEach(btn => {
+            btn.onclick = () => {
+              const idx = parseInt(btn.dataset.delIdx);
+              plan.exercises.splice(idx, 1);
+              renderEditor();
+            };
+          });
+
+          modal.querySelector('#btn-add-ex-plan').onclick = () => {
+            plan.exercises.push({
+              id: 'ex_' + Date.now(),
+              name: 'Nowe ćwiczenie',
+              targetSets: 3,
+              targetReps: 10,
+              defaultWeight: 20
+            });
+            renderEditor();
+          };
+
+          modal.querySelector('#btn-save-this-plan').onclick = () => {
+            const title = modal.querySelector('#inp-plan-title').value.trim();
+            const rest = parseInt(modal.querySelector('#inp-plan-rest').value) || 60;
+            if (!title) { alert('Wprowadź nazwę planu.'); return; }
+            plan.title = title;
+            plan.defaultRestSeconds = rest;
+            Storage.savePlan(plan);
+            close();
+            this.renderCurrentTab();
+          };
+
+          const bDelP = modal.querySelector('#btn-del-this-plan');
+          if (bDelP) {
+            bDelP.onclick = () => {
+              if (confirm('Usunąć ten plan treningowy?')) {
+                Storage.deletePlan(plan.id);
+                close();
+                this.renderCurrentTab();
+              }
+            };
+          }
+        };
+
+        renderEditor();
+      },
+
+      showPlanSelectorModal() {
+        const plans = Storage.getPlans();
+        if (plans.length === 0) {
+          this.openPlanEditor();
+          return;
+        }
+
+        const modal = document.getElementById('modal-container');
+        modal.innerHTML = `
+          <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in">
+            <div class="bg-white w-full max-w-lg rounded-t-[32px] sm:rounded-3xl p-6 shadow-2xl">
+              <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <h2 class="text-xl font-black uppercase text-[#0B132B]">Wybierz Trening</h2>
+                <button id="btn-close-sel" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 touch-press">✕</button>
+              </div>
+              <div class="py-4 space-y-2.5 max-h-80 overflow-y-auto">
+                ${plans.map(p => `
+                  <button data-pid="${p.id}" class="btn-pick-p w-full p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-left flex items-center justify-between touch-press">
+                    <div>
+                      <h3 class="font-extrabold text-sm text-[#0B132B] uppercase tracking-tight">${p.title}</h3>
+                      <p class="text-xs text-slate-400 mt-0.5">${p.exercises ? p.exercises.length : 0} ćwiczeń • Przerwa ${p.defaultRestSeconds || 60}s</p>
+                    </div>
+                    <span class="w-8 h-8 rounded-xl bg-[#0B132B] text-white flex items-center justify-center text-xs">▶</span>
+                  </button>
+                `).join('')}
+              </div>
+              <button id="btn-new-from-sel" class="w-full py-3.5 mt-2 rounded-2xl border-2 border-dashed border-slate-300 font-extrabold text-xs uppercase tracking-wider text-slate-700 touch-press">
+                + Stwórz nowy plan
+              </button>
+            </div>
+          </div>
+        `;
+
+        const close = () => { modal.innerHTML = ''; };
+        modal.querySelector('#btn-close-sel').onclick = close;
+        modal.querySelector('#btn-new-from-sel').onclick = () => { close(); this.openPlanEditor(); };
+        modal.querySelectorAll('.btn-pick-p').forEach(b => {
+          b.onclick = () => { close(); this.startWorkout(b.dataset.pid); };
+        });
+      },
+
+      /* Pomocnicze funkcje dat */
+      getWeekDays(baseDate) {
+        const curr = new Date(baseDate);
+        const jsDay = curr.getDay();
+        const dist = (jsDay === 0 ? -6 : 1) - jsDay;
+        const monday = new Date(curr);
+        monday.setDate(curr.getDate() + dist);
+        const names = ['Pn', 'Wt', 'Śr', 'Czw', 'Pt', 'So', 'Nd'];
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + i);
+          days.push({
+            date: d,
+            dateStr: d.toISOString().split('T')[0],
+            dayNum: i + 1,
+            dayName: names[i],
+            dayMonth: d.getDate()
+          });
+        }
+        return days;
+      },
+      getMonthName(date) {
+        const m = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+        return m[date.getMonth()];
+      }
+    };
+
+    // Start aplikacji po załadowaniu DOM
+    window.addEventListener('DOMContentLoaded', () => {
+      App.init();
+    });
+  </script>
+</body>
+</html>
